@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Vorix Stack – ein Spiel von VORIX</title>
+<meta name="description" content="Vorix Stack von VORIX: Staple die Blöcke so hoch du kannst! Tippen lässt den Block fallen, und wer genau trifft, bekommt PERFEKT. Kostenlos im Browser und auf dem Handy.">
+<link rel="canonical" href="https://ibralox37.github.io/vorix-stack/">
+<meta property="og:site_name" content="VORIX – WE CREATE GAMES">
+<meta property="og:title" content="Vorix Stack – ein Spiel von VORIX">
+<meta property="og:description" content="Staple die Blöcke so hoch du kannst! Ein Neon-Spiel mit nur einem Fingertipp. Kostenlos.">
+<meta property="og:image" content="https://ibralox37.github.io/vorix-stack/icon-512.png">
+<meta property="og:url" content="https://ibralox37.github.io/vorix-stack/">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Vorix Stack",
+  "url": "https://ibralox37.github.io/vorix-stack/",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "de",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "publisher": { "@type": "Organization", "name": "VORIX – WE CREATE GAMES", "url": "https://ibralox37.github.io/" }
+}
+</script>
+<meta name="theme-color" content="#07101c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stack">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+/* Design „Vorix Blau" – wie Timer Challenge, Spotter und Jump over the Wall */
+:root { --sat: env(safe-area-inset-top); --c-btn: #07518a; --c-accent: #00aaff; --orbitron: "Orbitron", "Rajdhani", Arial, sans-serif; --rajdhani: "Rajdhani", "Segoe UI", Arial, sans-serif; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; color: #fff; font-family: var(--rajdhani); touch-action: none; overscroll-behavior: none; }
+#spiel { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.versteckt { display: none !important; }
+.ebene { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); }
+.ebene.dunkel { background: rgba(4, 8, 16, .62); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.panel { width: min(92vw, 420px); max-height: 92vh; overflow-y: auto; text-align: center; padding: 24px 22px 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,.13);
+  background: linear-gradient(160deg, rgba(27,41,66,.94), rgba(17,26,43,.94)); box-shadow: 0 28px 80px rgba(0,0,0,.6), 0 0 40px rgba(0,136,255,.15); animation: rein .3s cubic-bezier(.2,1.3,.4,1); }
+.panel { scrollbar-width: none; } .panel::-webkit-scrollbar { display: none; }
+@keyframes rein { 0% { opacity: 0; transform: scale(.85) translateY(14px); } 100% { opacity: 1; transform: none; } }
+.menue-panel { background: none; border: 0; box-shadow: none; }
+.menue-panel .btn.sub { background: rgba(18,30,50,.94); }
+#logo { width: min(300px, 64vw); filter: drop-shadow(0 2px 18px rgba(0,110,220,.35)); animation: schweben 3.4s ease-in-out infinite; }
+@keyframes schweben { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.titel { font-family: var(--orbitron); font-weight: 900; font-size: clamp(30px, 9vw, 46px); line-height: 1.05; letter-spacing: 4px; margin: 6px 0 6px;
+  color: #fff; text-shadow: 0 0 10px #00aaff, 0 0 26px #00aaff, 0 0 52px #0055ff; }
+.unter { opacity: .75; font-size: 17px; margin: 0 0 10px; }
+.werte { font-family: var(--orbitron); font-size: 14px; letter-spacing: 1px; opacity: .85; margin-bottom: 14px; }
+.knoepfe { display: flex; flex-direction: column; gap: 10px; width: min(88vw, 320px); margin: 0 auto; }
+.reihe { display: flex; gap: 10px; } .reihe .btn { flex: 1; }
+.btn { display: block; width: 100%; padding: 15px 10px; border: 0; border-radius: 16px; color: #fff; font-family: var(--orbitron); font-size: 15px; font-weight: 700; letter-spacing: 1.2px; cursor: pointer; transition: filter .15s, transform .1s; }
+.btn:hover { filter: brightness(1.15); } .btn:active { transform: scale(.97); }
+.btn.play { padding: 19px 10px; font-size: 20px; background: linear-gradient(90deg, var(--c-btn), var(--c-accent)); box-shadow: 0 12px 34px rgba(0,0,0,.5); }
+.btn.sub { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.13); font-size: 13px; }
+.gross-zahl { font-family: var(--orbitron); font-weight: 900; font-size: 64px; line-height: 1; margin: 6px 0; text-shadow: 0 0 18px rgba(0,170,255,.6); }
+.panel h2 { font-family: var(--orbitron); margin: 0 0 4px; font-size: 24px; letter-spacing: 2px; }
+.info { opacity: .78; font-size: 16px; line-height: 1.4; margin: 6px 0 14px; }
+.abzeichen { display: inline-block; padding: 4px 12px; border-radius: 20px; font-family: var(--orbitron); font-size: 12px; font-weight: 900; letter-spacing: 1px; margin: 4px 0 8px;
+  background: linear-gradient(90deg, #8a6a12, #ffd24a); box-shadow: 0 0 14px rgba(255,210,74,.5); }
+.tipp { font-size: 13px; opacity: .55; margin-top: 12px; }
+.links { text-align: left; }
+.links p { margin: 0 0 10px; line-height: 1.45; opacity: .88; }
+.fuss { margin-top: 14px; font-family: var(--orbitron); font-size: 10px; letter-spacing: 1px; opacity: .45; }
+/* Vorix-Konto: Knopf oben links im Menü und das Anmelde-Fenster (wie in Jump over the Wall) */
+.konto-knopf { position: absolute; z-index: 2; top: calc(12px + env(safe-area-inset-top)); left: 12px; max-width: 46vw; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14);
+  background: rgba(7,81,138,.85); color: #fff; font-family: var(--orbitron); font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.konto-knopf.an { background: rgba(10,60,40,.9); border-color: rgba(47,207,120,.55); }
+.feld-label { display: block; text-align: left; font-family: var(--orbitron); font-size: 11px; letter-spacing: 1.5px; opacity: .7; margin: 10px 2px 5px; }
+.feld { display: block; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.3); color: #fff;
+  font-family: var(--rajdhani); font-size: 17px; font-weight: 600; outline: none; user-select: text; -webkit-user-select: text; }
+.feld:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(0,170,255,.2); }
+.fehler-text { min-height: 20px; color: #ff8a9a; font-size: 15px; font-weight: 600; line-height: 1.3; margin: 8px 0 4px; }
+.link-knopf { background: none; border: 0; padding: 0; color: var(--c-accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.konto-name { font-family: var(--orbitron); font-weight: 900; font-size: 22px; letter-spacing: 1px; margin: 4px 0 2px; word-break: break-all; }
+.konto-link-zeile { font-size: 13px; opacity: .8; margin-top: 12px; }
+/* Flache Bildschirme (Handy quer): alles etwas kompakter */
+@media (max-height: 640px) {
+  #logo { width: min(170px, 36vw); }
+  .titel { font-size: clamp(22px, 7vh, 36px); margin: 0 0 2px; }
+  .unter { font-size: 15px; margin: 0 0 4px; }
+  .werte { margin-bottom: 8px; font-size: 12px; }
+  .knoepfe { gap: 7px; }
+  .btn { padding: 10px; font-size: 12px; } .btn.play { padding: 13px 10px; font-size: 17px; }
+  .gross-zahl { font-size: 44px; }
+  .panel { padding: 16px 18px 14px; }
+  .info { margin: 4px 0 8px; font-size: 15px; }
+  .fuss { display: none; }
+  .feld { padding: 9px 12px; font-size: 16px; } .feld-label { margin: 6px 2px 4px; }
+  .konto-text { display: none; } .konto-link-zeile { margin-top: 8px; } .fehler-text { min-height: 6px; margin: 4px 0 2px; }
+}
+@media (max-height: 440px) { #logo { display: none; } .tipp { display: none; } }
+/* Handy hochkant: Menü etwas nach oben, damit unten der Turm Platz hat */
+@media (orientation: portrait) and (max-width: 600px) { .menue-panel { margin-bottom: 14vh; } .fuss { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="spiel"></canvas>
+
+<!-- Startbildschirm -->
+<div id="menue" class="ebene">
+  <button id="konto-knopf" class="konto-knopf">👤 ANMELDEN</button>
+  <div class="panel menue-panel">
+    <img id="logo" src="vorix-logo-hell.png" alt="VORIX – WE CREATE GAMES">
+    <div class="titel">VORIX<br>STACK</div>
+    <p class="unter">Staple die Blöcke so hoch du kannst.</p>
+    <div class="werte" id="menue-werte"></div>
+    <div class="knoepfe">
+      <button class="btn play" id="k-spielen">▶ SPIELEN</button>
+      <div class="reihe"><button class="btn sub" id="k-hilfe">❓ SO GEHT'S</button><button class="btn sub" id="k-ton"></button></div>
+    </div>
+    <div class="fuss">© 2026 VORIX – WE CREATE GAMES</div>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div id="gameover" class="ebene dunkel versteckt">
+  <div class="panel">
+    <h2 id="go-titel">AUTSCH!</h2>
+    <div class="gross-zahl" id="go-punkte">0</div>
+    <div id="go-rekord" class="abzeichen versteckt">🏆 NEUER REKORD!</div>
+    <div class="info" id="go-info"></div>
+    <div class="knoepfe"><button class="btn play" id="k-nochmal">↻ NOCHMAL</button><button class="btn sub" id="k-go-menue">☰ MENÜ</button></div>
+    <div class="tipp">Tippen oder Leertaste = sofort nochmal</div>
+  </div>
+</div>
+
+<!-- Anleitung -->
+<div id="hilfe" class="ebene dunkel versteckt">
+  <div class="panel">
+    <h2>❓ SO GEHT'S</h2>
+    <div class="links info">
+      <p>🟦 Ein Block fährt hin und her. <b>Tippe</b> (am PC: Leertaste), dann fällt er auf den Turm.</p>
+      <p>✂️ Was über den Rand ragt, wird abgeschnitten. Der nächste Block ist dann kleiner.</p>
+      <p>✨ Triffst du genau, gibt es <b>PERFEKT</b>. Ab 3 perfekten Treffern hintereinander wird der Block wieder größer.</p>
+      <p>💥 Fällt der Block neben den Turm, ist das Spiel vorbei.</p>
+      <p>⚡ Je höher der Turm, desto schneller fahren die Blöcke.</p>
+      <p>👤 Oben links kannst du dich mit deinem <b>Vorix-Konto</b> anmelden, also mit demselben Konto wie in Timer Challenge.</p>
+    </div>
+    <button class="btn sub" id="k-hilfe-zu">VERSTANDEN</button>
+  </div>
+</div>
+
+<!-- Vorix-Konto -->
+<div id="konto" class="ebene dunkel versteckt">
+  <div class="panel">
+    <form id="konto-aus" autocomplete="on">
+      <h2>🔑 VORIX-KONTO</h2>
+      <div class="info konto-text">Melde dich mit deinem Konto von <b>Timer Challenge</b> an. Dein Bestwert bleibt auf diesem Gerät.</div>
+      <label class="feld-label" for="k-name">BENUTZERNAME</label>
+      <input class="feld" id="k-name" name="username" maxlength="20" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <label class="feld-label" for="k-passwort">PASSWORT</label>
+      <input class="feld" id="k-passwort" name="password" type="password" maxlength="72" autocomplete="current-password">
+      <div class="fehler-text" id="k-fehler"></div>
+      <div class="knoepfe"><button type="submit" class="btn play" id="k-anmelden">ANMELDEN</button><button type="button" class="btn sub" id="k-konto-zu">ZURÜCK</button></div>
+      <div class="konto-link-zeile">Noch kein Konto? <button type="button" class="link-knopf" id="k-timer">In Timer Challenge erstellen</button></div>
+    </form>
+    <div id="konto-an" class="versteckt">
+      <h2>👤 VORIX-KONTO</h2>
+      <div class="konto-name" id="k-angemeldet"></div>
+      <div class="info">Du bist angemeldet. Dein Bestwert bleibt auf diesem Gerät.</div>
+      <div class="knoepfe"><button type="button" class="btn sub" id="k-konto-fertig">FERTIG</button><button type="button" class="btn sub" id="k-abmelden">ABMELDEN</button></div>
+      <div class="tipp">Abmelden gilt nur hier. In Timer Challenge bleibst du angemeldet.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   VORIX STACK – ein Spiel von VORIX
+   Ibo wollte am 07.10.2026 „ein komplett simples neues Spiel im Vorix-Design".
+   Ein Block fährt hin und her. Tippen lässt ihn auf den Turm fallen,
+   was übersteht, wird abgeschnitten. Wie hoch wird der Turm?
+   ===================================================================== */
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ---------------- Speicher (alle Namen beginnen mit vorixStack, NIE kronix…) ---------------- */
+const LS = 'vorixStack';
+const daten = Object.assign({ best: 0, spiele: 0, perfekt: 0, ton: true }, (() => {
+  try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; }
+})());
+function sichern() { try { localStorage.setItem(LS, JSON.stringify(daten)); } catch (e) { /* egal */ } }
+
+/* ---------------- Spielwerte (Breiten als Anteil der Spielfläche: 1 = ganze Breite) ---------------- */
+const START_BREITE = 0.62;    // so breit ist der erste Block
+const WACHSEN = 0.035;        // so viel wird der Block nach 3 perfekten Treffern wieder breiter
+const UEBER = 0.08;           // so weit fährt der Block ganz am Turm vorbei (dann kann man ihn auch komplett verfehlen)
+const START_TEMPO = 0.8, MAX_TEMPO = 2.0;                                   // Spielflächen pro Sekunde
+const tempoFuer = p => Math.min(MAX_TEMPO, START_TEMPO + p * 0.022);
+const grenzen = (oben, w) => ({ min: oben.x - w - UEBER, max: oben.x + oben.w + UEBER });   // von hier bis hier fährt der Block
+// So genau muss man für PERFEKT treffen: etwa 3 Hundertstelsekunden. Wird der Block schneller,
+// ist das Fenster auf dem Bildschirm etwas breiter, damit es fair bleibt.
+const perfektFuer = p => Math.min(0.045, Math.max(0.016, tempoFuer(p) * 0.032));
+const farbeFuer = i => { const t = (i * 6) % 280; return 195 + (t < 140 ? t : 280 - t); };   // blau → lila → pink und zurück
+
+/* ---------------- Bildschirm ---------------- */
+const cv = $('spiel'), ctx = cv.getContext('2d');
+let W = 0, H = 0, B = 300, L = 0, BH = 30, BODEN = 0, OBEN = 14;
+function groesse() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  B = Math.min(W * 0.84, 460);                       // Breite der Spielfläche
+  L = (W - B) / 2;                                   // linker Rand der Spielfläche
+  BH = Math.max(16, Math.min(B * 0.085, H / 12));    // Höhe eines Blocks
+  BODEN = Math.round(H * 0.84);                      // hier steht der Turm
+  OBEN = 14 + (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0);   // Platz für die iPhone-Kamera
+}
+groesse();
+window.addEventListener('resize', groesse);
+const sterne = Array.from({ length: 90 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + 0.3, p: Math.random() * 6.3 }));
+
+/* ---------------- Zustand ---------------- */
+let zustand = 'menue';        // menue | spiel | tot
+let stapel = [], akt = null, teile = [], texte = [], ringe = [];
+let punkte = 0, serie = 0, kamera = 0, zoom = 1, blitz = 0, totZeit = 0, zeit = 0;
+
+function neuerTurm() {
+  stapel = [{ x: (1 - START_BREITE) / 2, w: START_BREITE, farbe: farbeFuer(0) }];
+  akt = null; teile = []; texte = []; ringe = [];
+  punkte = 0; serie = 0;
+}
+neuerTurm();
+
+/* ---------------- Töne (werden direkt erzeugt, keine Dateien) ---------------- */
+let ac = null;
+function audio() {
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) { ac = null; }
+  return ac;
+}
+function piep(f, d, typ = 'square', vol = 0.07, start = 0) {
+  if (!daten.ton) return; const c = audio(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + start;
+  o.type = typ; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + d + 0.05);
+}
+function rauschen(d, vol, hoch = 0) {
+  if (!daten.ton) return; const c = audio(); if (!c) return;
+  const n = Math.floor(c.sampleRate * d), buf = c.createBuffer(1, n, c.sampleRate), z = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) z[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const q = c.createBufferSource(), g = c.createGain(); q.buffer = buf; g.gain.value = vol;
+  if (hoch) { const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hoch; q.connect(f); f.connect(g); } else q.connect(g);
+  g.connect(c.destination); q.start();
+}
+const TONLEITER = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5, 1174.66, 1318.51, 1396.91, 1567.98];
+const TON = {
+  platz: () => { piep(240, 0.09, 'triangle', 0.08); rauschen(0.08, 0.05, 2500); },
+  perfekt: s => { const f = TONLEITER[Math.min(s - 1, TONLEITER.length - 1)]; piep(f, 0.22, 'sine', 0.09); piep(f * 2, 0.15, 'sine', 0.025, 0.03); },
+  meilenstein: () => [523, 659, 784, 1047].forEach((f, i) => piep(f, 0.16, 'triangle', 0.06, i * 0.07)),
+  tot: () => { rauschen(0.3, 0.12); piep(220, 0.5, 'sawtooth', 0.05); },
+};
+
+/* ---------------- Spielablauf ---------------- */
+function zeigeEbene(id) {
+  ['menue', 'gameover', 'hilfe', 'konto'].forEach(e => $(e).classList.toggle('versteckt', e !== id));
+  // Beim Spielen darf kein Knopf mehr ausgewählt sein, sonst drückt die Leertaste ihn mit
+  if (id === null && document.activeElement && document.activeElement !== document.body && document.activeElement.blur) document.activeElement.blur();
+}
+function menueZeigen() {
+  $('menue-werte').textContent = `BESTWERT ${daten.best}`;
+  $('k-ton').textContent = daten.ton ? '🔊 TÖNE AN' : '🔇 TÖNE AUS';
+  $('konto-knopf').textContent = daten.konto ? '👤 ' + daten.konto.name : '👤 ANMELDEN';
+  $('konto-knopf').classList.toggle('an', !!daten.konto);
+  zeigeEbene('menue');
+}
+function neuesSpiel() {
+  audio();
+  neuerTurm();
+  kamera = 0; zoom = 1; blitz = 0;
+  daten.spiele++; sichern();
+  zustand = 'spiel';
+  zeigeEbene(null);
+  naechsterBlock();
+}
+function zumMenue() {
+  zustand = 'menue'; neuerTurm(); kamera = 0; zoom = 1;
+  menueZeigen();
+}
+function naechsterBlock() {
+  const oben = stapel[stapel.length - 1];
+  const vonLinks = stapel.length % 2 === 1;          // abwechselnd von links und von rechts
+  const g = grenzen(oben, oben.w);
+  akt = { x: vonLinks ? g.min : g.max, w: oben.w, richtung: vonLinks ? 1 : -1, farbe: farbeFuer(stapel.length) };
+}
+// Ein abgeschnittenes Stück, das herunterfällt
+function stueck(x, w, i, farbe, seite) {
+  return { x, w, i, farbe, y: 0, vy: -80, dx: 0, vx: seite * (50 + Math.random() * 70), dreh: 0, vd: seite * (1.2 + Math.random() * 2.2) };
+}
+function fallenLassen() {
+  if (zustand !== 'spiel' || !akt) return;
+  const oben = stapel[stapel.length - 1];
+  const i = stapel.length;                            // auf dieser Höhe landet der neue Block
+  if (Math.abs(akt.x - oben.x) <= perfektFuer(punkte)) {   // PERFEKT: genau getroffen, nichts wird abgeschnitten
+    serie++; daten.perfekt++;
+    let x = oben.x, w = oben.w;
+    if (serie >= 3 && w < START_BREITE) {            // ab 3 perfekten Treffern wird der Block wieder breiter
+      const neu = Math.min(START_BREITE, w + WACHSEN);
+      x = Math.max(0, Math.min(1 - neu, x - (neu - w) / 2)); w = neu;
+    }
+    stapel.push({ x, w, farbe: akt.farbe });
+    ringe.push({ i, x, w, leben: 1 });
+    texte = texte.filter(t => t.gross);               // alter PERFEKT-Text weg, sonst liegen zwei übereinander
+    texte.push({ text: serie > 1 ? `PERFEKT ×${serie}` : 'PERFEKT!', i, leben: 1 });
+    TON.perfekt(serie);
+  } else {
+    const links = Math.max(akt.x, oben.x), rechts = Math.min(akt.x + akt.w, oben.x + oben.w);
+    if (rechts - links <= 0) {                        // ganz daneben: der Block fällt am Turm vorbei
+      teile.push(stueck(akt.x, akt.w, i, akt.farbe, akt.richtung));
+      akt = null;
+      return verloren();
+    }
+    serie = 0;
+    if (akt.x < oben.x) teile.push(stueck(akt.x, oben.x - akt.x, i, akt.farbe, -1));   // links stand etwas über
+    else teile.push(stueck(rechts, akt.x + akt.w - rechts, i, akt.farbe, 1));          // rechts stand etwas über
+    stapel.push({ x: links, w: rechts - links, farbe: akt.farbe });
+    TON.platz();
+  }
+  punkte = stapel.length - 1;
+  if (punkte === 10 || punkte % 25 === 0) { blitz = 0.35; texte.push({ text: `${punkte}!`, gross: true, leben: 1.3 }); TON.meilenstein(); }
+  naechsterBlock();
+}
+function verloren() {
+  zustand = 'tot'; totZeit = performance.now();
+  blitz = 0.25; TON.tot();
+  const neuerRekord = punkte > daten.best;
+  if (neuerRekord) daten.best = punkte;
+  sichern();
+  setTimeout(() => {
+    if (zustand !== 'tot') return;
+    $('go-titel').textContent = punkte >= 50 ? 'WAHNSINN!' : punkte >= 25 ? 'STARK!' : punkte >= 10 ? 'GUT!' : 'AUTSCH!';
+    $('go-punkte').textContent = punkte;
+    $('go-rekord').classList.toggle('versteckt', !neuerRekord || punkte === 0);
+    $('go-info').textContent = `${daten.konto ? daten.konto.name + ' · ' : ''}${punkte === 1 ? '1 Block' : punkte + ' Blöcke'} · Bestwert ${daten.best}`;
+    zeigeEbene('gameover');
+  }, 1000);
+}
+
+/* ---------------- Bewegung ---------------- */
+function aktualisieren(dt) {
+  zeit += dt;
+  if (zustand === 'spiel' && akt) {
+    akt.x += akt.richtung * tempoFuer(punkte) * dt;
+    const g = grenzen(stapel[stapel.length - 1], akt.w);
+    if (akt.x > g.max) { akt.x = g.max; akt.richtung = -1; }
+    if (akt.x < g.min) { akt.x = g.min; akt.richtung = 1; }
+  }
+  // Kamera: Der fahrende Block bleibt bei etwa 42 % der Höhe. Nach dem Spiel wird der ganze Turm gezeigt.
+  let zielKamera = 0, zielZoom = 1;
+  if (zustand === 'tot') zielZoom = Math.min(1, (BODEN - H * 0.2) / ((stapel.length + 1) * BH));
+  else zielKamera = Math.max(0, (stapel.length + 1) * BH - (BODEN - Math.max(H * 0.42, OBEN + 170)));   // quer: etwas Abstand zur Punktzahl
+  kamera += (zielKamera - kamera) * Math.min(1, dt * 5);
+  zoom += (zielZoom - zoom) * Math.min(1, dt * 2.5);
+  for (const t of teile) { t.vy += 1700 * dt; t.y += t.vy * dt; t.dx += t.vx * dt; t.dreh += t.vd * dt; }
+  teile = teile.filter(t => t.y < H * 3);
+  for (const r of ringe) r.leben -= dt * 2.2;
+  ringe = ringe.filter(r => r.leben > 0);
+  for (const t of texte) t.leben -= dt;
+  texte = texte.filter(t => t.leben > 0);
+  if (blitz > 0) blitz = Math.max(0, blitz - dt);
+}
+
+/* ---------------- Zeichnen ---------------- */
+const yVon = i => BODEN + kamera - (i + 1) * BH;          // Oberkante des Blocks auf Höhe i
+function block(b, y, leuchten, fahrend) {
+  const x = L + b.x * B, w = b.w * B;
+  const g = ctx.createLinearGradient(0, y, 0, y + BH);
+  g.addColorStop(0, `hsl(${b.farbe}, 100%, 64%)`);
+  g.addColorStop(1, `hsl(${b.farbe}, 95%, 40%)`);
+  if (leuchten) { ctx.shadowColor = `hsl(${b.farbe}, 100%, 55%)`; ctx.shadowBlur = fahrend ? 24 : 12; }
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y + 1, w, BH - 2);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,.42)'; ctx.fillRect(x, y + 1, w, 2);          // Lichtkante oben
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(x, y + BH - 4, w, 3);            // Schatten unten
+}
+function zeichnen() {
+  const farbe = stapel[stapel.length - 1].farbe;
+  // Hintergrund in der Farbe des obersten Blocks, ganz dunkel
+  const hg = ctx.createLinearGradient(0, 0, 0, H);
+  hg.addColorStop(0, `hsl(${farbe}, 65%, 9%)`); hg.addColorStop(1, '#03060c');
+  ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(W / 2, H * 0.6, 10, W / 2, H * 0.6, Math.max(W, H) * 0.6);
+  glow.addColorStop(0, `hsla(${farbe}, 100%, 55%, .16)`); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  // Sterne: funkeln und wandern mit, wenn der Turm wächst
+  ctx.fillStyle = '#fff';
+  for (const s of sterne) {
+    const y = ((s.y * H + kamera * 0.15) % H + H) % H;
+    ctx.globalAlpha = 0.3 + 0.35 * Math.sin(zeit * 2 + s.p);
+    ctx.fillRect(s.x * W, y, s.r, s.r);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.save();
+  ctx.translate(W / 2, BODEN); ctx.scale(zoom, zoom); ctx.translate(-W / 2, -BODEN);   // Zoom für den Blick auf den ganzen Turm
+  // Sockel unter dem ersten Block
+  const s0 = stapel[0], sx = L + s0.x * B, sw = s0.w * B, sy = yVon(0) + BH;
+  const sg = ctx.createLinearGradient(0, sy, 0, sy + H * 0.5);
+  sg.addColorStop(0, '#10233d'); sg.addColorStop(1, '#060d18');
+  ctx.fillStyle = sg; ctx.fillRect(sx, sy, sw, H * 3);
+  ctx.fillStyle = `hsla(${s0.farbe}, 100%, 60%, .45)`; ctx.fillRect(sx, sy, 2, H * 3); ctx.fillRect(sx + sw - 2, sy, 2, H * 3);
+  // Blöcke (nur die sichtbaren; die obersten leuchten)
+  const n = stapel.length;
+  for (let i = 0; i < n; i++) {
+    const y = yVon(i), ys = BODEN + (y - BODEN) * zoom;
+    if (ys > H + BH || ys < -BH * 2) continue;
+    block(stapel[i], y, i >= n - 8, false);
+  }
+  if (akt && zustand === 'spiel') block(akt, yVon(n), true, true);
+  // abgeschnittene Stücke fallen runter
+  for (const t of teile) {
+    const w = t.w * B, cx = L + t.x * B + w / 2 + t.dx, cy = yVon(t.i) + BH / 2 + t.y;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(t.dreh);
+    ctx.globalAlpha = Math.max(0, 1 - t.y / (H * 1.2));
+    block({ x: (-w / 2 - L) / B, w: t.w, farbe: t.farbe }, -BH / 2, false, false);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+  // PERFEKT: weißer Rahmen, der größer wird und verblasst
+  for (const r of ringe) {
+    const auf = (1 - r.leben) * 16;
+    ctx.strokeStyle = `rgba(255,255,255,${r.leben})`; ctx.lineWidth = 3;
+    ctx.strokeRect(L + r.x * B - auf, yVon(r.i) - auf, r.w * B + auf * 2, BH + auf * 2);
+  }
+  // kleine Texte am Turm
+  ctx.textAlign = 'center';
+  for (const t of texte) if (!t.gross) {
+    ctx.globalAlpha = Math.min(1, t.leben * 1.6);
+    ctx.font = `900 ${Math.round(Math.max(15, Math.min(22, BH * 0.7)))}px Orbitron, sans-serif`;
+    ctx.fillStyle = '#fff'; ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 14;
+    ctx.fillText(t.text, W / 2, yVon(t.i + 1) - 14 - (1 - t.leben) * 34);   // über dem nächsten, fahrenden Block
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Punktzahl oben
+  if (zustand !== 'menue') {
+    ctx.textAlign = 'center';
+    ctx.font = `900 ${Math.round(Math.max(40, Math.min(72, W * 0.13)))}px Orbitron, sans-serif`;
+    ctx.fillStyle = '#fff'; ctx.shadowColor = `hsl(${farbe}, 100%, 60%)`; ctx.shadowBlur = 18;
+    ctx.fillText(punkte, W / 2, OBEN + 60);
+    ctx.shadowBlur = 0;
+    ctx.font = '700 13px Orbitron, sans-serif'; ctx.globalAlpha = 0.7;
+    ctx.fillText(`BEST ${Math.max(daten.best, punkte)}`, W / 2, OBEN + 86);
+    ctx.globalAlpha = 1;
+  }
+  // große Texte bei 10, 25, 50 … Blöcken
+  for (const t of texte) if (t.gross) {
+    const a = Math.min(1, t.leben * 2), s = 1 + (1.3 - t.leben) * 0.25;
+    ctx.save(); ctx.translate(W / 2, H * 0.3); ctx.scale(s, s);
+    ctx.globalAlpha = a; ctx.textAlign = 'center';
+    ctx.font = `900 ${Math.round(Math.min(90, W * 0.2))}px Orbitron, sans-serif`;
+    ctx.fillStyle = '#fff'; ctx.shadowColor = '#00aaff'; ctx.shadowBlur = 30;
+    ctx.fillText(t.text, 0, 0);
+    ctx.restore();
+  }
+  if (blitz > 0) { ctx.fillStyle = `rgba(255,255,255,${blitz * 0.4})`; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ---------------- Hauptschleife ---------------- */
+let letzte = performance.now();
+function schleife(jetzt) {
+  const dt = Math.min(0.05, Math.max(0, (jetzt - letzte) / 1000));
+  letzte = jetzt;
+  aktualisieren(dt);
+  zeichnen();
+  requestAnimationFrame(schleife);
+}
+requestAnimationFrame(schleife);
+
+/* ---------------- Steuerung ---------------- */
+const istEingabe = el => !!(el && el.closest && el.closest('input, textarea, label'));   // Felder im Konto-Fenster
+window.addEventListener('pointerdown', e => {
+  if (e.target.closest && e.target.closest('button, input, label, a')) return;
+  if (zustand === 'spiel') { e.preventDefault(); fallenLassen(); }
+  else if (zustand === 'tot' && performance.now() - totZeit > 600) neuesSpiel();
+}, { passive: false });
+window.addEventListener('keydown', e => {
+  if (istEingabe(e.target)) return;   // beim Tippen von Name und Passwort nichts abfangen
+  const taste = e.code === 'Space' || e.code === 'ArrowDown' || e.code === 'ArrowUp';
+  if (!taste) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (zustand === 'spiel') fallenLassen();
+  else if (zustand === 'tot' && performance.now() - totZeit > 600) neuesSpiel();
+  else if (zustand === 'menue' && !$('menue').classList.contains('versteckt')) neuesSpiel();
+});
+window.addEventListener('contextmenu', e => { if (!istEingabe(e.target)) e.preventDefault(); });   // in den Feldern bleibt Einfügen möglich
+
+$('k-spielen').onclick = neuesSpiel;
+$('k-nochmal').onclick = neuesSpiel;
+$('k-go-menue').onclick = zumMenue;
+$('k-hilfe').onclick = () => zeigeEbene('hilfe');
+$('k-hilfe-zu').onclick = menueZeigen;
+$('k-ton').onclick = () => { daten.ton = !daten.ton; sichern(); menueZeigen(); if (daten.ton) TON.perfekt(1); };
+
+/* ---------------- Vorix-Konto: Anmelden und Abmelden (genau wie in Spotter und Jump over the Wall) ----------------
+   Ibo wollte am 07.10.2026: „mach für jedes Spiel Vorix-Konto". Erlaubt ist dasselbe wie bei Spotter
+   (Papa, Kennung ZC8): NUR Anmelden und den Namen anzeigen. Vorix Stack speichert NICHTS auf dem Server,
+   der Bestwert bleibt auf dem Gerät.
+   WICHTIG – nicht ändern:
+    - speicherName: Vorix Stack hat seine EIGENE Sitzung. Nie den Sitzungs-Schlüssel von Timer Challenge (sb-…)
+      benutzen, sonst kann ein Abmelden hier Timer Challenge durcheinanderbringen.
+    - domain und Namensregel: genau wie in Timer Challenge, sonst passen die Konten nicht zusammen.
+    - Abmelden nur mit scope 'local'. Ohne das wäre man auch in Timer Challenge abgemeldet, auf allen Geräten.
+    - Vorix Stack legt keine Konten an und löscht keine. Das macht nur Timer Challenge.
+   ------------------------------------------------------------------------------------------- */
+const KONTO = {
+  url: 'https://ygdgqpedwdpbxlicviks.supabase.co',
+  schluessel: 'sb_publishable_QtZnXFRDB8ypHHmOuY-qLg_MI-52tM5',   // öffentlicher Schlüssel, darf im Code stehen
+  bibliothek: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2',
+  speicherName: 'vorixStackKonto',
+  domain: '@spieler.kronix-timer.app',
+  timerAdresse: 'https://ibralox37.github.io/Timer-/',
+};
+let sb = null;   // Verbindung zum Vorix-Server. Wird erst geladen, wenn jemand das Konto benutzt.
+function skriptLaden(src) {
+  return new Promise((ok, fehler) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = ok; s.onerror = () => fehler(new Error('Konnte nicht laden: ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function kontoClient() {
+  if (sb) return sb;
+  if (!window.supabase) await skriptLaden(KONTO.bibliothek);
+  sb = window.supabase.createClient(KONTO.url, KONTO.schluessel, {
+    auth: { storageKey: KONTO.speicherName, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+  });
+  return sb;
+}
+// Genau dieselbe Regel wie in Timer Challenge: Leerzeichen weg, 3–20 Zeichen, dann kleinschreiben + Domain
+const nameGueltig = name => /^[a-zA-Z0-9_]{3,20}$/.test(name);
+const nameZuMail = name => name.toLowerCase() + KONTO.domain;
+
+async function kontoAnmelden(eingabeName, passwort) {
+  const name = String(eingabeName || '').trim();
+  if (!nameGueltig(name)) throw new Error('name');
+  if (String(passwort || '').length < 6) throw new Error('passwort');
+  const c = await kontoClient();
+  const { data, error } = await c.auth.signInWithPassword({ email: nameZuMail(name), password: passwort });
+  if (error) throw error;
+  const id = data.user.id;
+  // Den echten Namen (mit Groß- und Kleinschreibung) aus dem Profil holen und prüfen, ob das Konto gesperrt ist (nur lesen)
+  let echterName = name, gesperrt = false, grund = '';
+  try {
+    let antwort = await c.from('profiles').select('username,banned,ban_reason').eq('id', id).maybeSingle();
+    if (antwort.error) antwort = await c.from('profiles').select('username').eq('id', id).maybeSingle();
+    if (antwort.data) {
+      echterName = antwort.data.username || name;
+      gesperrt = antwort.data.banned === true;
+      grund = antwort.data.ban_reason || '';
+    }
+  } catch (e) { /* dann bleibt der eingegebene Name */ }
+  if (gesperrt) {
+    try { await c.auth.signOut({ scope: 'local' }); } catch (e) {}
+    const f = new Error('gesperrt'); f.grund = grund; throw f;
+  }
+  daten.konto = { id, name: String(echterName).slice(0, 20) };
+  sichern();
+}
+async function kontoAbmelden() {
+  try { const c = await kontoClient(); await c.auth.signOut({ scope: 'local' }); } catch (e) { /* offline – egal */ }
+  try { localStorage.removeItem(KONTO.speicherName); } catch (e) {}   // nur UNSERE Sitzung, nie die von Timer Challenge
+  delete daten.konto;
+  sichern();
+}
+// Nachsehen, ob die Anmeldung noch gilt. Ohne Internet bleibt der Name einfach stehen.
+// Läuft nie mitten im Spiel, damit das Laden nicht ruckelt.
+function kontoSpaeterPruefen() {
+  if (!daten.konto || !navigator.onLine) return;
+  if (zustand === 'spiel') { setTimeout(kontoSpaeterPruefen, 3000); return; }
+  kontoClient()
+    .then(c => c.auth.getSession())
+    .then(({ data }) => {
+      if (!data.session) { delete daten.konto; sichern(); if (zustand === 'menue') menueZeigen(); }
+    })
+    .catch(() => { /* Server nicht erreichbar – Name bleibt stehen */ });
+}
+function kontoFehlerText(e) {
+  const m = String((e && (e.message || e.code)) || '');
+  if (m === 'name') return 'Der Name hat 3 bis 20 Zeichen: Buchstaben, Zahlen oder _ (so wie bei Timer Challenge).';
+  if (m === 'passwort') return 'Das Passwort hat mindestens 6 Zeichen.';
+  if (m === 'gesperrt') return '⛔ Dieses Konto ist gesperrt.' + (e.grund ? ' Grund: ' + e.grund : '');
+  if (/invalid login credentials|invalid_credentials/i.test(m)) return 'Name oder Passwort stimmt nicht.';
+  if (/rate limit|too many/i.test(m)) return 'Zu viele Versuche. Warte kurz und versuch es dann nochmal.';
+  if (/fetch|network|load failed|konnte nicht laden/i.test(m)) return 'Keine Verbindung zum Vorix-Server. Ist das Internet an?';
+  return 'Das hat nicht geklappt. Versuch es gleich nochmal.';
+}
+function kontoZeigen() {
+  const an = !!daten.konto;
+  $('konto-aus').classList.toggle('versteckt', an);
+  $('konto-an').classList.toggle('versteckt', !an);
+  $('k-fehler').textContent = '';
+  $('k-passwort').value = '';
+  if (an) $('k-angemeldet').textContent = daten.konto.name;
+  zeigeEbene('konto');
+  if (!an && window.matchMedia('(pointer: fine)').matches) setTimeout(() => $('k-name').focus(), 250);   // am PC gleich lostippen
+}
+async function kontoLos() {
+  const knopf = $('k-anmelden');
+  if (knopf.disabled) return;
+  $('k-fehler').textContent = '';
+  knopf.disabled = true; knopf.textContent = 'PRÜFE …';
+  try {
+    await kontoAnmelden($('k-name').value, $('k-passwort').value);
+    $('k-passwort').value = '';
+    TON.meilenstein();
+    kontoZeigen();
+  } catch (e) {
+    console.warn('Anmeldung:', e);
+    $('k-fehler').textContent = kontoFehlerText(e);
+  } finally {
+    knopf.disabled = false; knopf.textContent = 'ANMELDEN';
+  }
+}
+$('konto-knopf').onclick = kontoZeigen;
+$('konto-aus').addEventListener('submit', e => { e.preventDefault(); kontoLos(); });   // Knopf ANMELDEN oder Enter im Passwort-Feld
+$('k-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('k-passwort').focus(); } });
+$('k-konto-zu').onclick = () => { $('k-passwort').value = ''; menueZeigen(); };
+$('k-konto-fertig').onclick = menueZeigen;
+$('k-abmelden').onclick = async () => { await kontoAbmelden(); kontoZeigen(); };
+$('k-timer').onclick = () => window.open(KONTO.timerAdresse, '_blank', 'noopener');
+
+// Web-App: Service Worker nur im Internet (https) oder auf dem Test-Rechner
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+menueZeigen();
+setTimeout(kontoSpaeterPruefen, 1500);   // gilt die Anmeldung mit dem Vorix-Konto noch?
+</script>
+</body>
+</html>
