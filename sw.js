@@ -8,7 +8,7 @@
    seine eigenen Speicher (Name beginnt mit "vorix-stack-"). Fremde Speicher nie anfassen!
    ===================================================================== */
 
-const SPIEL = 'vorix-stack-spiel-1';      // bei jeder neuen Version die Zahl erhöhen
+const SPIEL = 'vorix-stack-spiel-2';      // bei jeder neuen Version die Zahl erhöhen (2 = Start-Fenster Konto/Gast, 08.10.2026)
 const SCHRIFT = 'vorix-stack-schrift-1';  // Schriftarten
 const DATEIEN = ['./', './index.html', './manifest.json', './vorix-logo-hell.png',
   './favicon.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
