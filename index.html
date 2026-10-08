@@ -2,6 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<!-- Sicherheit (08.10.2026): Das Spiel darf nur von diesen Adressen etwas laden. Neue Adresse noetig? Hier eintragen. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://ygdgqpedwdpbxlicviks.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>Vorix Stack – ein Spiel von VORIX</title>
 <meta name="description" content="Vorix Stack von VORIX: Staple die Blöcke so hoch du kannst! Tippen lässt den Block fallen, und wer genau trifft, bekommt PERFEKT. Kostenlos im Browser und auf dem Handy.">
@@ -264,12 +267,12 @@ const sterne = Array.from({ length: 90 }, () => ({ x: Math.random(), y: Math.ran
 
 /* ---------------- Zustand ---------------- */
 let zustand = 'menue';        // menue | spiel | tot
-let stapel = [], akt = null, teile = [], texte = [], ringe = [];
+let stapel = [], akt = null, teile = [], texte = [], ringe = [], funken = [];   // funken: Funken bei PERFEKT
 let punkte = 0, serie = 0, kamera = 0, zoom = 1, blitz = 0, totZeit = 0, zeit = 0;
 
 function neuerTurm() {
   stapel = [{ x: (1 - START_BREITE) / 2, w: START_BREITE, farbe: farbeFuer(0) }];
-  akt = null; teile = []; texte = []; ringe = [];
+  akt = null; teile = []; texte = []; ringe = []; funken = [];
   punkte = 0; serie = 0;
 }
 neuerTurm();
@@ -352,6 +355,10 @@ function fallenLassen() {
     }
     stapel.push({ x, w, farbe: akt.farbe });
     ringe.push({ i, x, w, leben: 1 });
+    for (let k = 0; k < 18 + Math.min(serie, 8) * 3; k++) {   // Funken an der Oberkante, je länger die Serie, desto mehr
+      const px = L + (x + Math.random() * w) * B - tiefe() / 2;
+      funken.push({ i, x: px, y: 0, vx: (Math.random() - 0.5) * 220, vy: -80 - Math.random() * 220, leben: 0.7 + Math.random() * 0.5, farbe: akt.farbe });
+    }
     texte = texte.filter(t => t.gross);               // alter PERFEKT-Text weg, sonst liegen zwei übereinander
     texte.push({ text: serie > 1 ? `PERFEKT ×${serie}` : 'PERFEKT!', i, leben: 1 });
     TON.perfekt(serie);
@@ -407,6 +414,8 @@ function aktualisieren(dt) {
   zoom += (zielZoom - zoom) * Math.min(1, dt * 2.5);
   for (const t of teile) { t.vy += 1700 * dt; t.y += t.vy * dt; t.dx += t.vx * dt; t.dreh += t.vd * dt; }
   teile = teile.filter(t => t.y < H * 3);
+  for (const f of funken) { f.vy += 500 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.leben -= dt * 1.5; }
+  funken = funken.filter(f => f.leben > 0);
   for (const r of ringe) r.leben -= dt * 2.2;
   ringe = ringe.filter(r => r.leben > 0);
   for (const t of texte) t.leben -= dt;
@@ -416,17 +425,47 @@ function aktualisieren(dt) {
 
 /* ---------------- Zeichnen ---------------- */
 const yVon = i => BODEN + kamera - (i + 1) * BH;          // Oberkante des Blocks auf Höhe i
+// 3D-Tiefe der Blöcke: Oberseite und rechte Seite (wie beim echten Stack-Spiel)
+const tiefe = () => BH * 0.5;
+const tiefeY = () => BH * 0.28;
+const blockX = b => L + b.x * B - tiefe() / 2;            // um die halbe Tiefe nach links, damit der Turm mittig bleibt
 function block(b, y, leuchten, fahrend) {
-  const x = L + b.x * B, w = b.w * B;
+  const x = blockX(b), w = b.w * B, d = tiefe(), dy = tiefeY(), oben = y + 1, unten = y + BH - 1;
+  // rechte Seite (dunkler)
+  ctx.fillStyle = `hsl(${b.farbe}, 80%, 26%)`;
+  ctx.beginPath(); ctx.moveTo(x + w, oben); ctx.lineTo(x + w + d, oben - dy); ctx.lineTo(x + w + d, unten - dy); ctx.lineTo(x + w, unten); ctx.closePath(); ctx.fill();
+  // Oberseite (hell)
+  const go = ctx.createLinearGradient(0, oben - dy, 0, oben);
+  go.addColorStop(0, `hsl(${b.farbe}, 100%, 80%)`); go.addColorStop(1, `hsl(${b.farbe}, 100%, 68%)`);
+  ctx.fillStyle = go;
+  ctx.beginPath(); ctx.moveTo(x, oben); ctx.lineTo(x + d, oben - dy); ctx.lineTo(x + w + d, oben - dy); ctx.lineTo(x + w, oben); ctx.closePath(); ctx.fill();
+  // Vorderseite
   const g = ctx.createLinearGradient(0, y, 0, y + BH);
-  g.addColorStop(0, `hsl(${b.farbe}, 100%, 64%)`);
-  g.addColorStop(1, `hsl(${b.farbe}, 95%, 40%)`);
+  g.addColorStop(0, `hsl(${b.farbe}, 100%, 62%)`);
+  g.addColorStop(1, `hsl(${b.farbe}, 95%, 38%)`);
   if (leuchten) { ctx.shadowColor = `hsl(${b.farbe}, 100%, 55%)`; ctx.shadowBlur = fahrend ? 24 : 12; }
   ctx.fillStyle = g;
-  ctx.fillRect(x, y + 1, w, BH - 2);
+  ctx.fillRect(x, oben, w, BH - 2);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(255,255,255,.42)'; ctx.fillRect(x, y + 1, w, 2);          // Lichtkante oben
-  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(x, y + BH - 4, w, 3);            // Schatten unten
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(x, oben, w, 1.5);          // Lichtkante oben
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(x, unten - 3, w, 3);            // Schatten unten
+}
+// Leuchtende Nebel im Hintergrund, die langsam ziehen
+const nebel = [{ x: 0.18, y: 0.25, r: 0.55, v: 0.11, p: 0, h: 0 }, { x: 0.82, y: 0.55, r: 0.65, v: 0.08, p: 2, h: 40 }, { x: 0.45, y: 0.9, r: 0.5, v: 0.14, p: 4, h: -30 }];
+let vignette = null, vignetteGroesse = '';
+function vignetteBild() {
+  const schluessel = W + 'x' + H;
+  if (vignette && vignetteGroesse === schluessel) return vignette;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  vignette = document.createElement('canvas');
+  vignette.width = Math.max(1, Math.round(W * dpr)); vignette.height = Math.max(1, Math.round(H * dpr));
+  const x = vignette.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const g = x.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.32, W / 2, H * 0.5, Math.max(W, H) * 0.78);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  vignetteGroesse = schluessel;
+  return vignette;
 }
 function zeichnen() {
   const farbe = stapel[stapel.length - 1].farbe;
@@ -437,6 +476,14 @@ function zeichnen() {
   const glow = ctx.createRadialGradient(W / 2, H * 0.6, 10, W / 2, H * 0.6, Math.max(W, H) * 0.6);
   glow.addColorStop(0, `hsla(${farbe}, 100%, 55%, .16)`); glow.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  for (const n of nebel) {                                  // Nebel, wandern langsam mit der Kamera
+    const r = Math.max(W, H) * n.r;
+    const cx = (n.x + 0.07 * Math.sin(zeit * n.v + n.p)) * W;
+    const cy = (((n.y * H + kamera * 0.1 + 0.05 * H * Math.cos(zeit * n.v * 0.8 + n.p)) % (H * 1.6)) + H * 1.6) % (H * 1.6) - H * 0.3;
+    const ng = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    ng.addColorStop(0, `hsla(${farbe + n.h}, 90%, 55%, .11)`); ng.addColorStop(1, `hsla(${farbe + n.h}, 90%, 55%, 0)`);
+    ctx.fillStyle = ng; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
   // Sterne: funkeln und wandern mit, wenn der Turm wächst
   ctx.fillStyle = '#fff';
   for (const s of sterne) {
@@ -449,7 +496,9 @@ function zeichnen() {
   ctx.save();
   ctx.translate(W / 2, BODEN); ctx.scale(zoom, zoom); ctx.translate(-W / 2, -BODEN);   // Zoom für den Blick auf den ganzen Turm
   // Sockel unter dem ersten Block
-  const s0 = stapel[0], sx = L + s0.x * B, sw = s0.w * B, sy = yVon(0) + BH;
+  const s0 = stapel[0], sx = blockX(s0), sw = s0.w * B, sy = yVon(0) + BH;
+  ctx.fillStyle = '#0a1628';                                // Seite des Sockels (3D)
+  ctx.beginPath(); ctx.moveTo(sx + sw, sy - 1); ctx.lineTo(sx + sw + tiefe(), sy - 1 - tiefeY()); ctx.lineTo(sx + sw + tiefe(), sy + H * 3); ctx.lineTo(sx + sw, sy + H * 3); ctx.closePath(); ctx.fill();
   const sg = ctx.createLinearGradient(0, sy, 0, sy + H * 0.5);
   sg.addColorStop(0, '#10233d'); sg.addColorStop(1, '#060d18');
   ctx.fillStyle = sg; ctx.fillRect(sx, sy, sw, H * 3);
@@ -475,8 +524,18 @@ function zeichnen() {
   for (const r of ringe) {
     const auf = (1 - r.leben) * 16;
     ctx.strokeStyle = `rgba(255,255,255,${r.leben})`; ctx.lineWidth = 3;
-    ctx.strokeRect(L + r.x * B - auf, yVon(r.i) - auf, r.w * B + auf * 2, BH + auf * 2);
+    ctx.strokeRect(L + r.x * B - tiefe() / 2 - auf, yVon(r.i) - auf, r.w * B + auf * 2, BH + auf * 2);
   }
+  // Funken bei PERFEKT (leuchten, additiv)
+  ctx.globalCompositeOperation = 'lighter';
+  for (const f of funken) {
+    ctx.globalAlpha = Math.max(0, f.leben);
+    ctx.fillStyle = `hsl(${f.farbe}, 100%, ${70 + 20 * f.leben}%)`;
+    const g = 1.5 + 2.5 * f.leben;
+    ctx.fillRect(f.x - g / 2, yVon(f.i) + f.y - g / 2, g, g);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
   // kleine Texte am Turm
   ctx.textAlign = 'center';
   for (const t of texte) if (!t.gross) {
@@ -511,6 +570,7 @@ function zeichnen() {
     ctx.restore();
   }
   if (blitz > 0) { ctx.fillStyle = `rgba(255,255,255,${blitz * 0.4})`; ctx.fillRect(0, 0, W, H); }
+  ctx.drawImage(vignetteBild(), 0, 0, W, H);               // Rand etwas dunkler
 }
 
 /* ---------------- Hauptschleife ---------------- */
@@ -565,22 +625,24 @@ const KONTO = {
   url: 'https://ygdgqpedwdpbxlicviks.supabase.co',
   schluessel: 'sb_publishable_QtZnXFRDB8ypHHmOuY-qLg_MI-52tM5',   // öffentlicher Schlüssel, darf im Code stehen
   bibliothek: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2',
+  pruefsumme: 'sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF',   // Fingerabdruck: der Browser laedt die Datei nur, wenn sie genau diese ist (neue Version = neuer Fingerabdruck)
   speicherName: 'vorixStackKonto',
   domain: '@spieler.kronix-timer.app',
   timerAdresse: 'https://ibralox37.github.io/Timer-/',
 };
 let sb = null;   // Verbindung zum Vorix-Server. Wird erst geladen, wenn jemand das Konto benutzt.
-function skriptLaden(src) {
+function skriptLaden(src, pruefsumme) {
   return new Promise((ok, fehler) => {
     const s = document.createElement('script');
     s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+    if (pruefsumme) s.integrity = pruefsumme;
     s.onload = ok; s.onerror = () => fehler(new Error('Konnte nicht laden: ' + src));
     document.head.appendChild(s);
   });
 }
 async function kontoClient() {
   if (sb) return sb;
-  if (!window.supabase) await skriptLaden(KONTO.bibliothek);
+  if (!window.supabase) await skriptLaden(KONTO.bibliothek, KONTO.pruefsumme);
   sb = window.supabase.createClient(KONTO.url, KONTO.schluessel, {
     auth: { storageKey: KONTO.speicherName, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
   });
