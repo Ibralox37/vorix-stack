@@ -84,6 +84,24 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; col
 .link-knopf { background: none; border: 0; padding: 0; color: var(--c-accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
 .konto-name { font-family: var(--orbitron); font-weight: 900; font-size: 22px; letter-spacing: 1px; margin: 4px 0 2px; word-break: break-all; }
 .konto-link-zeile { font-size: 13px; opacity: .8; margin-top: 12px; }
+/* Start-Fenster wie bei Timer Challenge: Anmelden, Neues Konto, Als Gast spielen */
+.start-logo { display: none; width: min(230px, 58vw); margin: 0 auto 6px; filter: drop-shadow(0 2px 18px rgba(0,110,220,.35)); }
+#konto.start .start-logo { display: block; }
+#konto.start .menue-nur, #konto:not(.start) .start-nur { display: none; }
+@media (max-height: 560px) { #konto.start .start-logo { display: none; } }
+@media (max-height: 440px) { #konto.start .knoepfe { display: grid; grid-template-columns: 1fr 1fr; } #konto.start #k-anmelden { grid-column: 1 / -1; } }   /* Handy quer: Neues Konto und Gast nebeneinander */
+/* Bestenliste: Knopf oben rechts im Menü und das Fenster mit den Plätzen (wie in Jump over the Wall) */
+.bl-knopf { position: absolute; z-index: 2; top: calc(12px + env(safe-area-inset-top)); right: 12px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255,210,74,.5);
+  background: rgba(60,45,8,.9); color: #fff; font-family: var(--orbitron); font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
+.bl-liste { text-align: left; margin: 8px 0 12px; max-height: 46vh; overflow-y: auto; scrollbar-width: thin; }
+.bl-zeile { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid transparent; margin-bottom: 6px; font-size: 16px; font-weight: 600; }
+.bl-zeile.ich { background: rgba(0,170,255,.16); border-color: rgba(0,170,255,.5); }
+.bl-platz { font-family: var(--orbitron); font-weight: 900; min-width: 30px; text-align: center; }
+.bl-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bl-punkte { font-family: var(--orbitron); font-weight: 700; }
+.bl-loeschen { border: 1px solid rgba(255,90,110,.55); background: rgba(120,20,30,.65); color: #fff; border-radius: 10px; padding: 5px 9px; font-family: var(--rajdhani); font-size: 13px; font-weight: 700; cursor: pointer; }
+.bl-abschnitt { font-family: var(--orbitron); font-size: 11px; letter-spacing: 1.5px; opacity: .6; margin: 8px 2px 6px; }
+.bl-admin { display: inline-block; margin: 2px 0 4px; padding: 3px 10px; border-radius: 20px; font-family: var(--orbitron); font-size: 11px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(90deg, #8a1a2a, #ff4f6d); }
 /* Flache Bildschirme (Handy quer): alles etwas kompakter */
 @media (max-height: 640px) {
   #logo { width: min(170px, 36vw); }
@@ -110,6 +128,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; col
 <!-- Startbildschirm -->
 <div id="menue" class="ebene">
   <button id="konto-knopf" class="konto-knopf">👤 ANMELDEN</button>
+  <button id="bl-knopf" class="bl-knopf">🏆 BESTENLISTE</button>
   <div class="panel menue-panel">
     <img id="logo" src="vorix-logo-hell.png" alt="VORIX – WE CREATE GAMES">
     <div class="titel">VORIX<br>STACK</div>
@@ -130,6 +149,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; col
     <div class="gross-zahl" id="go-punkte">0</div>
     <div id="go-rekord" class="abzeichen versteckt">🏆 NEUER REKORD!</div>
     <div class="info" id="go-info"></div>
+    <div class="info" id="go-bl" style="margin-top:0"></div>
     <div class="knoepfe"><button class="btn play" id="k-nochmal">↻ NOCHMAL</button><button class="btn sub" id="k-go-menue">☰ MENÜ</button></div>
     <div class="tipp">Tippen oder Leertaste = sofort nochmal</div>
   </div>
@@ -146,6 +166,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; col
       <p>💥 Fällt der Block neben den Turm, ist das Spiel vorbei.</p>
       <p>⚡ Je höher der Turm, desto schneller fahren die Blöcke.</p>
       <p>👤 Oben links kannst du dich mit deinem <b>Vorix-Konto</b> anmelden, also mit demselben Konto wie in Timer Challenge.</p>
+      <p id="hilfe-bl">🏆 Oben rechts ist die <b>Bestenliste</b>. Mit Vorix-Konto kommt dein Bestwert von selbst hinein.</p>
     </div>
     <button class="btn sub" id="k-hilfe-zu">VERSTANDEN</button>
   </div>
@@ -155,23 +176,42 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #060d18; col
 <div id="konto" class="ebene dunkel versteckt">
   <div class="panel">
     <form id="konto-aus" autocomplete="on">
-      <h2>🔑 VORIX-KONTO</h2>
-      <div class="info konto-text">Melde dich mit deinem Konto von <b>Timer Challenge</b> an. Dein Bestwert bleibt auf diesem Gerät.</div>
+      <img class="start-logo" src="vorix-logo-hell.png" alt="VORIX – WE CREATE GAMES">
+      <h2 id="k-titel">🔑 VORIX-KONTO</h2>
+      <div class="info konto-text" id="k-text"></div>
       <label class="feld-label" for="k-name">BENUTZERNAME</label>
       <input class="feld" id="k-name" name="username" maxlength="20" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
       <label class="feld-label" for="k-passwort">PASSWORT</label>
       <input class="feld" id="k-passwort" name="password" type="password" maxlength="72" autocomplete="current-password">
       <div class="fehler-text" id="k-fehler"></div>
-      <div class="knoepfe"><button type="submit" class="btn play" id="k-anmelden">ANMELDEN</button><button type="button" class="btn sub" id="k-konto-zu">ZURÜCK</button></div>
-      <div class="konto-link-zeile">Noch kein Konto? <button type="button" class="link-knopf" id="k-timer">In Timer Challenge erstellen</button></div>
+      <div class="knoepfe">
+        <button type="submit" class="btn play" id="k-anmelden">ANMELDEN</button>
+        <button type="button" class="btn sub start-nur" id="k-neu">✨ NEUES KONTO ERSTELLEN</button>
+        <button type="button" class="btn sub start-nur" id="k-gast">👤 ALS GAST SPIELEN</button>
+        <button type="button" class="btn sub menue-nur" id="k-konto-zu">ZURÜCK</button>
+      </div>
+      <div class="konto-link-zeile menue-nur">Noch kein Konto? <button type="button" class="link-knopf" id="k-timer">In Timer Challenge erstellen</button></div>
+      <div class="konto-link-zeile start-nur">Als Gast bleibt dein Bestwert nur auf diesem Gerät. Neue Konten erstellst du in Timer Challenge.</div>
     </form>
     <div id="konto-an" class="versteckt">
       <h2>👤 VORIX-KONTO</h2>
       <div class="konto-name" id="k-angemeldet"></div>
-      <div class="info">Du bist angemeldet. Dein Bestwert bleibt auf diesem Gerät.</div>
+      <div class="info" id="k-an-text"></div>
       <div class="knoepfe"><button type="button" class="btn sub" id="k-konto-fertig">FERTIG</button><button type="button" class="btn sub" id="k-abmelden">ABMELDEN</button></div>
       <div class="tipp">Abmelden gilt nur hier. In Timer Challenge bleibst du angemeldet.</div>
     </div>
+  </div>
+</div>
+
+<!-- Bestenliste -->
+<div id="bestenliste" class="ebene dunkel versteckt">
+  <div class="panel">
+    <h2>🏆 BESTENLISTE</h2>
+    <div id="bl-admin" class="bl-admin versteckt">ADMIN · 🗑️ LÖSCHT EINTRÄGE</div>
+    <div class="info" id="bl-info" style="margin-bottom:0"></div>
+    <div class="bl-liste" id="bl-liste"></div>
+    <div class="knoepfe"><button type="button" class="btn sub" id="bl-zu">ZURÜCK</button></div>
+    <div class="konto-link-zeile" id="bl-konto-zeile"><button type="button" class="link-knopf" id="bl-anmelden">Mit Vorix-Konto anmelden</button>, dann kommst du auch in die Liste.</div>
   </div>
 </div>
 
@@ -265,7 +305,7 @@ const TON = {
 
 /* ---------------- Spielablauf ---------------- */
 function zeigeEbene(id) {
-  ['menue', 'gameover', 'hilfe', 'konto'].forEach(e => $(e).classList.toggle('versteckt', e !== id));
+  ['menue', 'gameover', 'hilfe', 'konto', 'bestenliste'].forEach(e => $(e).classList.toggle('versteckt', e !== id));
   // Beim Spielen darf kein Knopf mehr ausgewählt sein, sonst drückt die Leertaste ihn mit
   if (id === null && document.activeElement && document.activeElement !== document.body && document.activeElement.blur) document.activeElement.blur();
 }
@@ -344,7 +384,9 @@ function verloren() {
     $('go-punkte').textContent = punkte;
     $('go-rekord').classList.toggle('versteckt', !neuerRekord || punkte === 0);
     $('go-info').textContent = `${daten.konto ? daten.konto.name + ' · ' : ''}${punkte === 1 ? '1 Block' : punkte + ' Blöcke'} · Bestwert ${daten.best}`;
+    $('go-bl').textContent = '';
     zeigeEbene('gameover');
+    if (neuerRekord) blNachSpiel();   // neuer Bestwert: ab in die Bestenliste (nur mit Vorix-Konto)
   }, 1000);
 }
 
@@ -557,21 +599,22 @@ async function kontoAnmelden(eingabeName, passwort) {
   if (error) throw error;
   const id = data.user.id;
   // Den echten Namen (mit Groß- und Kleinschreibung) aus dem Profil holen und prüfen, ob das Konto gesperrt ist (nur lesen)
-  let echterName = name, gesperrt = false, grund = '';
+  let echterName = name, gesperrt = false, grund = '', admin = false;
   try {
-    let antwort = await c.from('profiles').select('username,banned,ban_reason').eq('id', id).maybeSingle();
+    let antwort = await c.from('profiles').select('username,banned,ban_reason,is_admin').eq('id', id).maybeSingle();
     if (antwort.error) antwort = await c.from('profiles').select('username').eq('id', id).maybeSingle();
     if (antwort.data) {
       echterName = antwort.data.username || name;
       gesperrt = antwort.data.banned === true;
       grund = antwort.data.ban_reason || '';
+      admin = antwort.data.is_admin === true;
     }
   } catch (e) { /* dann bleibt der eingegebene Name */ }
   if (gesperrt) {
     try { await c.auth.signOut({ scope: 'local' }); } catch (e) {}
     const f = new Error('gesperrt'); f.grund = grund; throw f;
   }
-  daten.konto = { id, name: String(echterName).slice(0, 20) };
+  daten.konto = { id, name: String(echterName).slice(0, 20), admin };   // admin zeigt nur die Löschknöpfe; ob es erlaubt ist, prüft der Server
   sichern();
 }
 async function kontoAbmelden() {
@@ -604,6 +647,10 @@ function kontoFehlerText(e) {
 }
 function kontoZeigen() {
   const an = !!daten.konto;
+  $('konto').classList.remove('start');
+  $('k-titel').textContent = '🔑 VORIX-KONTO';
+  $('k-text').textContent = 'Melde dich mit deinem Konto von Timer Challenge an.' + (BESTENLISTE_AN ? ' Dann kommt dein Bestwert in die Bestenliste.' : '');
+  $('k-an-text').textContent = 'Du bist angemeldet. ' + (BESTENLISTE_AN ? 'Dein Bestwert kommt in die Bestenliste.' : 'Dein Bestwert bleibt auf diesem Gerät.');
   $('konto-aus').classList.toggle('versteckt', an);
   $('konto-an').classList.toggle('versteckt', !an);
   $('k-fehler').textContent = '';
@@ -612,16 +659,26 @@ function kontoZeigen() {
   zeigeEbene('konto');
   if (!an && window.matchMedia('(pointer: fine)').matches) setTimeout(() => $('k-name').focus(), 250);   // am PC gleich lostippen
 }
+// Start-Fenster wie bei Timer Challenge (Ibos Wunsch, 08.10.2026): Anmelden, Neues Konto oder Als Gast spielen.
+// Kommt, solange man weder angemeldet ist noch „Als Gast spielen" gewählt hat (und nach dem Abmelden).
+function startZeigen() {
+  kontoZeigen();
+  $('konto').classList.add('start');
+  $('k-titel').textContent = 'ANMELDEN';
+  $('k-text').textContent = 'Melde dich mit deinem Benutzernamen und Passwort von Timer Challenge an.';
+}
 async function kontoLos() {
   const knopf = $('k-anmelden');
   if (knopf.disabled) return;
   $('k-fehler').textContent = '';
   knopf.disabled = true; knopf.textContent = 'PRÜFE …';
+  const vomStart = $('konto').classList.contains('start');
   try {
     await kontoAnmelden($('k-name').value, $('k-passwort').value);
     $('k-passwort').value = '';
     TON.meilenstein();
-    kontoZeigen();
+    if (vomStart) menueZeigen(); else kontoZeigen();   // vom Start-Fenster aus direkt ins Menü
+    bestwertMelden();   // den Bestwert von diesem Gerät gleich in die Bestenliste
   } catch (e) {
     console.warn('Anmeldung:', e);
     $('k-fehler').textContent = kontoFehlerText(e);
@@ -629,19 +686,124 @@ async function kontoLos() {
     knopf.disabled = false; knopf.textContent = 'ANMELDEN';
   }
 }
-$('konto-knopf').onclick = kontoZeigen;
+$('konto-knopf').onclick = () => kontoZeigen();
+$('k-gast').onclick = () => { daten.gast = true; sichern(); menueZeigen(); };
+$('k-neu').onclick = () => window.open(KONTO.timerAdresse, '_blank', 'noopener');
 $('konto-aus').addEventListener('submit', e => { e.preventDefault(); kontoLos(); });   // Knopf ANMELDEN oder Enter im Passwort-Feld
 $('k-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('k-passwort').focus(); } });
 $('k-konto-zu').onclick = () => { $('k-passwort').value = ''; menueZeigen(); };
 $('k-konto-fertig').onclick = menueZeigen;
-$('k-abmelden').onclick = async () => { await kontoAbmelden(); kontoZeigen(); };
+$('k-abmelden').onclick = async () => { await kontoAbmelden(); daten.gast = false; sichern(); startZeigen(); };
 $('k-timer').onclick = () => window.open(KONTO.timerAdresse, '_blank', 'noopener');
+
+/* ---------------- Bestenliste (Vorix-Server, Tabelle game_scores) – genau wie in Jump over the Wall ----------------
+   Läuft über das Server-Paket „01 Inbox/Vorix Bestenlisten/bestenlisten-setup.sql" (Papas OK nötig).
+   - Schreiben NUR über game_submit_score: Der Server speichert nur bessere Werte und nimmt
+     von gesperrten Konten nichts an.
+   - Lesen über game_ranking: Gesperrte fehlen, Admins stehen „außer Konkurrenz" (wie in Timer Challenge).
+   - Admins löschen Einträge über game_admin_delete_score. Ob jemand Admin ist, prüft der SERVER;
+     daten.konto.admin blendet hier nur die Löschknöpfe ein.
+   ------------------------------------------------------------------------------- */
+// SCHALTER: Die Bestenliste ist eingebaut, aber AUS, bis Papa das Server-Paket erlaubt und ausgeführt hat
+// (Frage YD3). Solange false: kein Knopf, kein Eintragen, kein Kontakt zum Server für die Bestenliste.
+const BESTENLISTE_AN = false;
+const BL = { spiel: 'stack', einheit: 'Blöcke' };
+const blText = e => String((e && (e.message || e.code)) || '');
+const blNochNichtDa = e => /PGRST202|could not find the function|does not exist|schema cache/i.test(blText(e));
+// Bestwert melden, wenn er höher ist als der zuletzt gemeldete. Gibt den Bestwert vom Server zurück oder null.
+async function bestwertMelden() {
+  if (!BESTENLISTE_AN || !daten.konto || !navigator.onLine || !(daten.best > 0)) return null;
+  if ((daten.konto.gemeldet || 0) >= daten.best) return null;
+  try {
+    const c = await kontoClient();
+    const { data, error } = await c.rpc('game_submit_score', { p_game: BL.spiel, p_score: daten.best });
+    if (error) throw error;
+    daten.konto.gemeldet = daten.best; sichern();
+    return data;
+  } catch (e) { console.warn('Bestenliste melden:', e); return null; }
+}
+async function blHolen() {
+  const c = await kontoClient();
+  const { data, error } = await c.rpc('game_ranking', { p_game: BL.spiel, p_limit: 50 });
+  if (error) throw error;
+  return data || [];
+}
+// Nach dem Spiel: neuen Bestwert melden und den Platz im Game-Over-Fenster zeigen
+async function blNachSpiel() {
+  const wert = await bestwertMelden();
+  if (wert == null || zustand !== 'tot') return;
+  $('go-bl').textContent = '☁️ Neuer Bestwert in der Bestenliste!';
+  try {
+    const ich = (await blHolen()).find(z => z.ich && !z.ausser_konkurrenz);
+    if (ich && zustand === 'tot') $('go-bl').textContent = `🏆 Bestenliste: Platz ${ich.platz}`;
+  } catch (e) { /* dann bleibt der Text oben */ }
+}
+async function blZeigen() {
+  zeigeEbene('bestenliste');
+  const info = $('bl-info');
+  $('bl-liste').textContent = '';
+  $('bl-admin').classList.toggle('versteckt', !(daten.konto && daten.konto.admin));
+  $('bl-konto-zeile').classList.toggle('versteckt', !!daten.konto);
+  if (!navigator.onLine) { info.textContent = 'Ohne Internet gibt es keine Bestenliste.'; return; }
+  info.textContent = 'Lädt …';
+  try {
+    await bestwertMelden();
+    blFuellen(await blHolen());
+  } catch (e) {
+    console.warn('Bestenliste:', e);
+    info.textContent = blNochNichtDa(e) ? 'Die Bestenliste wird gerade eingerichtet. Bald geht es los!' : 'Keine Verbindung zum Vorix-Server. Versuch es gleich nochmal.';
+  }
+}
+function blFuellen(zeilen) {
+  const liste = $('bl-liste'), admin = !!(daten.konto && daten.konto.admin);
+  liste.textContent = '';
+  const ausser = zeilen.filter(z => z.ausser_konkurrenz), normal = zeilen.filter(z => !z.ausser_konkurrenz);
+  $('bl-info').textContent = !normal.length ? 'Noch niemand drin. Sei der Erste!'
+    : (daten.konto && !zeilen.some(z => z.ich)) ? 'Du bist noch nicht in den Top 50.' : `${normal.length} Spieler · ${BL.einheit}`;
+  const abschnitt = t => { const d = document.createElement('div'); d.className = 'bl-abschnitt'; d.textContent = t; liste.append(d); };
+  const zeile = (z, platz) => {
+    const d = document.createElement('div');
+    d.className = 'bl-zeile' + (z.ich ? ' ich' : '');
+    const feld = (klasse, text) => { const s = document.createElement('span'); s.className = klasse; s.textContent = text; d.append(s); };
+    feld('bl-platz', platz);
+    feld('bl-name', z.username + (z.ich ? ' (du)' : ''));
+    feld('bl-punkte', Number(z.score).toLocaleString('de-DE'));
+    if (admin) {
+      const b = document.createElement('button');
+      b.className = 'bl-loeschen'; b.textContent = '🗑️';
+      b.title = 'Eintrag löschen';
+      b.onclick = async () => {
+        if (b.dataset.sicher !== '1') { b.dataset.sicher = '1'; b.textContent = 'Sicher?'; return; }   // zweimal tippen = löschen
+        b.disabled = true; b.textContent = '…';
+        try {
+          const c = await kontoClient();
+          const { error } = await c.rpc('game_admin_delete_score', { p_game: BL.spiel, p_user: z.user_id });
+          if (error) throw error;
+          if (z.ich) { daten.konto.gemeldet = 0; sichern(); }
+          blZeigen();
+        } catch (e) {
+          console.warn('Löschen:', e);
+          b.textContent = /admin/i.test(blText(e)) ? 'Kein Admin' : 'Fehler';
+        }
+      };
+      d.append(b);
+    }
+    liste.append(d);
+  };
+  if (ausser.length) { abschnitt('⭐ AUSSER KONKURRENZ'); ausser.forEach(z => zeile(z, '⭐')); if (normal.length) abschnitt('PLÄTZE'); }
+  normal.forEach(z => zeile(z, z.platz <= 3 ? ['🥇', '🥈', '🥉'][z.platz - 1] : z.platz));
+}
+$('bl-knopf').onclick = blZeigen;
+$('bl-zu').onclick = menueZeigen;
+$('bl-anmelden').onclick = () => kontoZeigen();
+$('bl-knopf').classList.toggle('versteckt', !BESTENLISTE_AN);
+$('hilfe-bl').classList.toggle('versteckt', !BESTENLISTE_AN);
 
 // Web-App: Service Worker nur im Internet (https) oder auf dem Test-Rechner
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-menueZeigen();
+if (daten.konto || daten.gast) menueZeigen(); else startZeigen();   // am Anfang: Anmelden oder Als Gast (wie Timer Challenge)
 setTimeout(kontoSpaeterPruefen, 1500);   // gilt die Anmeldung mit dem Vorix-Konto noch?
 </script>
 </body>
